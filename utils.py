@@ -66,6 +66,7 @@ def nltk_tagger(words):
     #POS tagging the words based on WordNet
     #This point can be improved with N-grams. Next iteration will improve tag.
     tagged_words = nltk.pos_tag(words)
+    #returns tuple: [('word1','tag1'),('word2','tag2'),...,('word2','tag2')]
     
     #Create a string with all the words lemmatized
     lemmatized_string=''
@@ -103,9 +104,19 @@ def train_for_n_grams():
 
     train_for_n_grams = brown.tagged_sents(tagset='universal')
     return train_for_n_grams
-	
 
-def n_gram_POS_tagger(words):
+def ngram_pos_tagger():
+    '''This function trains ngram tagger and return it for using it'''
+
+    default_tagger=DefaultTagger('NOUN')
+    t1=UnigramTagger(train=train_for_n_grams(),backoff=default_tagger)
+    t2=NgramTagger(n=2,train=train_for_n_grams(),backoff=t1)
+    t3=NgramTagger(n=3,train=train_for_n_grams(),backoff=t2)
+    t4=NgramTagger(n=4,train=train_for_n_grams(),backoff=t3)
+    
+    return t4
+
+def n_gram_POS_tagger(words,t4):
     '''This function performs POS tagging based on concatenated n-grams + DefaultTagger
        This function must take a list of words and return a list of the format: [('word1','tag1'), ('word2','tag2'),...]
     '''
@@ -114,31 +125,24 @@ def n_gram_POS_tagger(words):
     #Change words to lower case
     words=convert_list_to_lower(words)
     
-    #Trainning taggers
-    default_tagger=DefaultTagger('NOUN')
-    t1=UnigramTagger(train=train_for_n_grams(),backoff=default_tagger)
-    t2=NgramTagger(n=2,train=train_for_n_grams(),backoff=t1)
-    t3=NgramTagger(n=3,train=train_for_n_grams(),backoff=t2)
-    t4=NgramTagger(n=4,train=train_for_n_grams(),backoff=t3)
-    
     #Deploy the POS tagging chain
     tagged_words=t4.tag(words)
     
     #Create lemmatize string based on ngrams
+    lemmatized_string=''
     for (w,t) in tagged_words:
-        lemmatized_string=''
-        lemmatized_string+=' '+wnlt.lemmatize(w,pos=get_wordnet_pos(t))
-    
+        lemmatized_string+=' '+wnlt.lemmatize(w,pos=get_wordnet_pos(t))    
     return lemmatized_string
 
 
-def ngram_lemmatizer(df, label=[1, 2]):
+def ngram_lemmatizer(df, tagger, label=[1, 2]):
     '''This function returns a text after being lemmatized to be afterwards inserted in the CountVectorizer functions.
     :input: panda.dataframe
     :input: number of the column that needs to be lemmatized
     :output: dataframe lemmatized'''
 
-    
+
+    #This flag will be set to one after the 1st time this function is run and Ngrams are trainned.
     for column in label:
         # Every loop in i is a new row in the dataframe
         for i in range(df.shape[0]):
@@ -151,7 +155,7 @@ def ngram_lemmatizer(df, label=[1, 2]):
             elif column == 2:
                 stamp = 'text_ngram_lemmatized'
 
-            df.at[i, stamp] = n_gram_POS_tagger(text_list)
+            df.at[i, stamp] = n_gram_POS_tagger(text_list,tagger)
             text_list = []
 
     return df
