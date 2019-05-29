@@ -240,3 +240,12 @@ def str_eliminate_over_30(words):
             new_string+=' '+word
 
     return new_string
+	
+	
+def print_csv(validation_set,pred):
+    ''':input: df with ID '''
+    df=validation_set.copy(deep=True)
+    df['prediction']=pred
+    
+    df.to_csv(path_or_buf='./Sebas&Breo_Predictions.csv',)
+    return df
