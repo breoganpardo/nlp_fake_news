@@ -88,9 +88,9 @@ def wordnet_lemmatizer(df, label=[1, 2]):
             text_list = word_tokenize(str(df.iloc[i, column]), language='english')
                    
 
-            if column == 1:
+            if column == label[0]:
                 stamp = 'title_wordnet_lemmatized'
-            elif column == 2:
+            elif column == label[1]:
                 stamp = 'text_wordnet_lemmatized'
 
             df.at[i, stamp] = nltk_tagger(text_list)
@@ -150,12 +150,93 @@ def ngram_lemmatizer(df, tagger, label=[1, 2]):
             text_list = word_tokenize(str(df.iloc[i, column]), language='english')
                    
 
-            if column == 1:
+            if column == label[0]:
                 stamp = 'title_ngram_lemmatized'
-            elif column == 2:
+            elif column == label[1]:
                 stamp = 'text_ngram_lemmatized'
 
             df.at[i, stamp] = n_gram_POS_tagger(text_list,tagger)
             text_list = []
 
     return df
+
+
+def str_special_char(words, add_char):
+    '''Function that removes all special characters from an input list if they are not letters 
+    or numbers
+    :input: list of tokenized words
+    :output: string with only words without special characters
+    '''
+    from string import punctuation
+    import re
+    
+    new_string = ''
+    
+    for word in words:
+        
+        if (word in set(punctuation)) and add_char:
+            new_string+=' '+'SPECIAL_CHAR'
+        
+        reg_exp = re.sub('[^A-Za-z0-9]+', '', word)
+        if len(reg_exp) != 0:
+            new_string += ' ' + reg_exp
+        else:
+            new_string += reg_exp
+
+    return new_string
+
+def del_special_char(df, label=[1, 2], add_char = False):
+    '''This function returns a df with two new columns for "text" and "label" with special characters eliminated 
+    so its performance is evaluated later.
+    :input: panda.dataframe
+    :input: number of the column that needs to be corrected
+    :output: dataframe with two new columns for label and text without special characters'''
+    
+    for column in label:
+        # Every loop in i is a new row in the dataframe
+        for i in range(df.shape[0]):
+            # tokenize each row
+            text_list = word_tokenize(str(df.iloc[i, column]), language='english')
+                   
+            if column == label[0]:
+                stamp = 'title_no_special_char'
+            elif column == label[1]:
+                stamp = 'text_no_special_char'
+
+            df.at[i, stamp] = str_special_char(text_list, add_char)
+            text_list = []
+
+    return df
+
+def eliminate_over_30(df,label=[4,5]):
+    '''...
+    :input: panda.dataframe
+    :input: number of the column that needs to be lemmatized
+    :output: dataframe lemmatized'''
+    
+    for column in label:
+        # Every loop in i is a new row in the dataframe
+        for i in range(df.shape[0]):
+            # tokenize each row
+            text_list = word_tokenize(str(df.iloc[i, column]), language='english')
+                   
+
+            if column == label[0]:
+                stamp = 'title_eliminate_over30'
+            elif column == label[1]:
+                stamp = 'text_eliminate_over30'
+
+            df.at[i, stamp] =str_eliminate_over_30(text_list)
+            text_list = []
+
+    return df
+
+def str_eliminate_over_30(words):
+    new_string = ''
+    
+    for word in words:
+        
+        if len(word)<30:
+            new_string+=' '+word
+
+    return new_string

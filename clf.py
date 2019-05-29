@@ -29,9 +29,9 @@ def classifiers(count_train,count_test,tfidf_train,tfidf_test,y_train,y_test):
     
     #Classifiers definition
     naive_clf= MultinomialNB()
-    passive_clf=PassiveAggressiveClassifier(n_iter=50)
-    max_clf=LogisticRegression()
-    svc_clf = SVC()
+    passive_clf=PassiveAggressiveClassifier(n_iter=50,random_state=198374)
+    max_clf=LogisticRegression(random_state=198374)
+    svc_clf = SVC(random_state=198374)
     
     #Models and scores dictionary
     model_score_dict={}
@@ -147,3 +147,6 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+    plt.show()
+    plt.close()
+    
